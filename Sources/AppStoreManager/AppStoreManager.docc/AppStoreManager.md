@@ -10,6 +10,14 @@ By simply including `AppStoreManager` in your App Project and defining your `Pro
 * Promoted In-App Purchases.
 * Restored Product Purchases.
 
+### Testing a Promoted In-App Purchase
+
+To test a Promoted In-App Purchase either Email or Message the device that you are testing on a string in the following format:
+
+`itms-services://?action=purchaseIntent&bundleId=Com.company.app&productIdentifier=InAppPurchaseProductID`
+
+Where `Com.company.app` is your App's Bundle ID and `InAppPurchaseProductID` is the In-App Purchase that you want to test.
+
 ### Telling AppStoreManager About Your Products
 
 You'll need to include a `Products.plist` in your App's Bundle that defines the Products that you have for sale, along with any useful metadata (such as an Image or Long Description) that you wish to define.
