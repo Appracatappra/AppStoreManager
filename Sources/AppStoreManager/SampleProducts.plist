@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>InAppPurchaseID01</key>
+	<dict>
+		<key>Image</key>
+		<string>ProductImageName01</string>
+		<key>Description</key>
+		<string>ProductDescription01</string>
+	</dict>
+	<key>InAppPurchaseID02</key>
+	<dict>
+		<key>Image</key>
+		<string>ProductImageName02</string>
+		<key>Description</key>
+		<string>ProductDescription02</string>
+	</dict>
+	<key>InAppPurchaseID03</key>
+	<dict>
+		<key>Image</key>
+		<string>ProductImageName03</string>
+		<key>Description</key>
+		<string>ProductDescription03</string>
+	</dict>
+</dict>
+</plist>
