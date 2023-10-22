@@ -9,6 +9,8 @@ import Foundation
 import StoreKit
 import Observation
 import LogManager
+import SwiftletUtilities
+import SimpleSerializer
 
 /// Defines an alias for the standard `StoreKit.Transaction`.
 public typealias Transaction = StoreKit.Transaction
@@ -41,6 +43,9 @@ public typealias Transaction = StoreKit.Transaction
     /// A list of available products.
     private(set) var products: [Product] = []
     
+    /// A saved set of simplified products.
+    private var vault:[VaultProduct] = []
+    
     /// A list of purchased products.
     private(set) var purchasedProducts: [Product] = []
     
@@ -61,6 +66,16 @@ public typealias Transaction = StoreKit.Transaction
     
     /// A Callback that handles the user selecting a Promoted In-App Purchase from the App Store.
     public var promotedInAppPurchaseEvent: productEventHandler? = nil
+    
+    // MARK: - Computed Properties
+    /// Returns the key to the vault of simplified products.
+    private var vaultKey:String {
+        if let bundleIdentifier = Bundle.main.bundleIdentifier {
+            return "\(bundleIdentifier).\(HardwareInformation.modelName)"
+        } else {
+            return "AppStoreManager.\(HardwareInformation.modelName)"
+        }
+    }
     
     // MARK: - Initializers
     /// Creates a new instance of the object and Starts it running.
@@ -254,19 +269,131 @@ public typealias Transaction = StoreKit.Transaction
         // Update the store information with the purchased products.
         self.purchasedProducts = purchases
         
+        // Save simplified purchases to vault.
+        vault = []
+        for product in purchasedProducts {
+            vault.append(VaultProduct(clone: product))
+        }
+        
+        // Are we conected to the network?
+        if NetworkConnection.isConnectedToNetwork() {
+            // Yes, enshrine the vault
+            enshrineVault()
+        }
+        
         // Inform app that the purchases have changed
         if let handler = purchasesUpdated {
             handler()
         }
     }
     
+    /// Converst the vault into a serialized string.
+    /// - Returns: The serialized version of the vault.
+    private func serializeVault() -> String {
+        let serializer = Serializer(divider: "¶")
+            .append(HardwareInformation.modelName)
+        
+        // serialize the vault
+        for product in vault {
+            serializer.append(product.serialized)
+        }
+        
+        return serializer.value
+    }
+    
+    /// Restores the vault from the serialized string.
+    /// - Parameter text: The serialized version of the vault.
+    private func deserializeVault(from text:String) {
+        var item:String = ""
+        
+        let deserializer = Deserializer(text: text, divider: "¶")
+        let modelName = deserializer.string()
+        
+        // Empty the vault
+        vault = []
+        
+        // Is this a good vaulted value?
+        guard modelName == HardwareInformation.modelName else {
+            return
+        }
+        
+        // Restore vault
+        item = deserializer.string()
+        while item != "" {
+            vault.append(VaultProduct(from: item))
+            item = deserializer.string()
+        }
+    }
+    
+    /// Mummifies the vault and stores it in a user preference.
+    private func enshrineVault() {
+        let serialized = serializeVault()
+        let checksum = ObfuscationProvider.checksum(serialized)
+        
+        let serializer = Serializer(divider: "≠")
+            .append(serialized)
+            .append(checksum)
+        
+        let deifiedVault = ObfuscationProvider.obfuscate(serializer.value)
+        UserDefaults.standard.setValue(deifiedVault, forKey: vaultKey)
+    }
+    
+    /// Pulls the vault from the crypt, unwraps and restores it.
+    private func decantVault() {
+        let deifiedVault = UserDefaults.standard.string(forKey: vaultKey) ?? ""
+        
+        // Did we get a returned vault?
+        guard deifiedVault != "" else {
+            // Empty vault and return
+            vault = []
+            return
+        }
+        
+        let downcastVault = ObfuscationProvider.deobfuscate(deifiedVault)
+        let deserializer = Deserializer(text: downcastVault, divider: "≠")
+        let serialized = deserializer.string()
+        let checksum = deserializer.int()
+        
+        // Ensure the vault has not been tampered with or damaged
+        guard ObfuscationProvider.verify(text: serialized, checksum: checksum) else {
+            return
+        }
+        
+        // Restore the vault
+        deserializeVault(from: serialized)
+    }
+    
+    /// Checks to see if the given product is in the vault.
+    /// - Parameter id: The product id to check.
+    /// - Returns: Returns `true` if the product is in the vault, else returns `false`.
+    private func isInVault(id:String) -> Bool {
+        
+        // Scan all items in the vault.
+        for product in _vault {
+            if product.id == id {
+                return true
+            }
+        }
+        
+        // Not found
+        return false
+    }
+    
     /// Tests to see if the given product has been purchased from the App Store.
     /// - Parameter product: The Product to test.
     /// - Returns: Returns `true` if purchased, else returns `false`.
     public func isPurchased(_ product: Product) async throws -> Bool {
+        
+        // Ensure that we have a network connection
+        guard NetworkConnection.isConnectedToNetwork() else {
+            // Attempt to check the vault
+            decantVault()
+            return isInVault(id: product.id)
+        }
+        
         // Determine whether the user purchases a given product.
         switch product.type {
-        case .nonConsumable:
+        case .autoRenewable, .nonConsumable, .consumable, .nonRenewable:
             return purchasedProducts.contains(product)
         default:
             return false
@@ -277,6 +404,14 @@ public typealias Transaction = StoreKit.Transaction
     /// - Parameter id: The ID of the Product to test.
     /// - Returns: Returns `true` if purchased, else returns `false`.
     public func isPurchased(id:String) -> Bool {
+        
+        // Ensure that we have a network connection
+        guard NetworkConnection.isConnectedToNetwork() else {
+            // Attempt to check the vault
+            decantVault()
+            return isInVault(id: id)
+        }
+        
         // Scan all items
         for product in purchasedProducts {
             if product.id == id {
