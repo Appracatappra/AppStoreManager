@@ -44,7 +44,7 @@ public typealias Transaction = StoreKit.Transaction
     private(set) var products: [Product] = []
     
     /// A saved set of simplified products.
-    private var vault:[VaultProduct] = []
+    @ObservationIgnored private var vault:[VaultProduct] = []
     
     /// A list of purchased products.
     private(set) var purchasedProducts: [Product] = []
@@ -369,7 +369,7 @@ public typealias Transaction = StoreKit.Transaction
     private func isInVault(id:String) -> Bool {
         
         // Scan all items in the vault.
-        for product in _vault {
+        for product in vault {
             if product.id == id {
                 return true
             }
