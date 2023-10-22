@@ -3,10 +3,10 @@
     {
       "identity" : "logmanager",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Appracatappra/LogManager.git",
+      "location" : "https://github.com/Appracatappra/LogManager",
       "state" : {
-        "revision" : "5dc038a098c8646e19f87424907e08b74809d06c",
-        "version" : "1.0.1"
+        "revision" : "aa1c1a9d15ea104a590df766af3f81da5afabab7",
+        "version" : "1.0.2"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appracatappra/SimpleSerializer",
       "state" : {
-        "revision" : "1ae6f0ccc4e65898a1a165c43af1762e9656c226",
-        "version" : "1.0.1"
+        "revision" : "6fc8eb78aade4f00732518c8696ff8a68b83e7b2",
+        "version" : "1.0.3"
       }
     },
     {
@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appracatappra/SwiftletUtilities",
       "state" : {
-        "revision" : "70302ea68790802c19f53645eebed371a022cf84",
-        "version" : "1.1.6"
+        "revision" : "7cc84ffb53bc9886b51c0bf2de3d308dd64a71cd",
+        "version" : "1.1.7"
       }
     }
   ],
