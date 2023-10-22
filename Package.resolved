@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appracatappra/SwiftletUtilities",
       "state" : {
-        "revision" : "3024e7846b7e15e23406bbb5378ec71cf06761ab",
-        "version" : "1.1.5"
+        "revision" : "70302ea68790802c19f53645eebed371a022cf84",
+        "version" : "1.1.6"
       }
     }
   ],
