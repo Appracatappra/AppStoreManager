@@ -80,6 +80,11 @@ public typealias Transaction = StoreKit.Transaction
         }
     }
     
+    /// Returns the key to the vault of version purchase history.
+    private var historyKey:String {
+        return vaultKey + ".00"
+    }
+    
     // MARK: - Initializers
     /// Creates a new instance of the object and Starts it running.
     public init() {
@@ -106,6 +111,9 @@ public typealias Transaction = StoreKit.Transaction
             // Deliver products that the customer purchases.
             await updateCustomerProductStatus()
         }
+        
+        // Load any app purchase history if available.
+        decantHistory()
     }
     
     // MARK: - Deinitializer
@@ -173,6 +181,7 @@ public typealias Transaction = StoreKit.Transaction
         
         // Record the history in the Store Manager
         purchaseHistory = versions
+        enshrineHistory()
     }
     
     /// This function listens for background transactions from the App Store.
@@ -342,15 +351,29 @@ public typealias Transaction = StoreKit.Transaction
         }
     }
     
-    /// Converst the vault into a serialized string.
+    /// Converts the vault into a serialized string.
     /// - Returns: The serialized version of the vault.
     private func serializeVault() -> String {
         let serializer = Serializer(divider: "¶")
             .append(HardwareInformation.modelName)
         
-        // serialize the vault
+        // Serialize the vault
         for product in vault {
             serializer.append(product.serialized)
+        }
+        
+        return serializer.value
+    }
+    
+    /// Converst the version history into a serialized string.
+    /// - Returns: The serialized version of the history.
+    private func serializeHistory() -> String {
+        let serializer = Serializer(divider: "¶")
+            .append(HardwareInformation.modelName)
+        
+        // Serialize the history
+        for history in purchaseHistory {
+            serializer.append(history.serialized)
         }
         
         return serializer.value
@@ -380,6 +403,30 @@ public typealias Transaction = StoreKit.Transaction
         }
     }
     
+    /// Restores the history from the serialized string.
+    /// - Parameter text: The serialized version of the history.
+    private func deserializeHistory(from text:String) {
+        var item:String = ""
+        
+        let deserializer = Deserializer(text: text, divider: "¶")
+        let modelName = deserializer.string()
+        
+        // Empty the vault
+        purchaseHistory = []
+        
+        // Is this a good vaulted value?
+        guard modelName == HardwareInformation.modelName else {
+            return
+        }
+        
+        // Restore history
+        item = deserializer.string()
+        while item != "" {
+            purchaseHistory.append(VersionHistory(from: item))
+            item = deserializer.string()
+        }
+    }
+    
     /// Mummifies the vault and stores it in a user preference.
     private func enshrineVault() {
         let serialized = serializeVault()
@@ -391,6 +438,19 @@ public typealias Transaction = StoreKit.Transaction
         
         let deifiedVault = ObfuscationProvider.obfuscate(serializer.value)
         UserDefaults.standard.setValue(deifiedVault, forKey: vaultKey)
+    }
+    
+    /// Mummifies the history and stores it in a user preference.
+    private func enshrineHistory() {
+        let serialized = serializeHistory()
+        let checksum = ObfuscationProvider.checksum(serialized)
+        
+        let serializer = Serializer(divider: "≠")
+            .append(serialized)
+            .append(checksum)
+        
+        let deifiedVault = ObfuscationProvider.obfuscate(serializer.value)
+        UserDefaults.standard.setValue(deifiedVault, forKey: historyKey)
     }
     
     /// Pulls the vault from the crypt, unwraps and restores it.
@@ -416,6 +476,31 @@ public typealias Transaction = StoreKit.Transaction
         
         // Restore the vault
         deserializeVault(from: serialized)
+    }
+    
+    /// Pulls the history from the crypt, unwraps and restores it.
+    private func decantHistory() {
+        let deifiedVault = UserDefaults.standard.string(forKey: historyKey) ?? ""
+        
+        // Did we get a returned vault?
+        guard deifiedVault != "" else {
+            // Empty vault and return
+            purchaseHistory = []
+            return
+        }
+        
+        let downcastVault = ObfuscationProvider.deobfuscate(deifiedVault)
+        let deserializer = Deserializer(text: downcastVault, divider: "≠")
+        let serialized = deserializer.string()
+        let checksum = deserializer.int()
+        
+        // Ensure the vault has not been tampered with or damaged
+        guard ObfuscationProvider.verify(text: serialized, checksum: checksum) else {
+            return
+        }
+        
+        // Restore the history
+        deserializeHistory(from: serialized)
     }
     
     /// Checks to see if the given product is in the vault.
