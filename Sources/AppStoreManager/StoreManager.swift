@@ -49,6 +49,9 @@ public typealias Transaction = StoreKit.Transaction
     /// A list of purchased products.
     private(set) var purchasedProducts: [Product] = []
     
+    /// A collection on optional version history events and their states.
+    private var purchaseHistory:[VersionHistory] = []
+    
     /// A task that handles background App Store transactions.
     public var updateListenerTask: Task<Void, Error>? = nil
     
@@ -118,6 +121,58 @@ public typealias Transaction = StoreKit.Transaction
         purchasesUpdated = nil
         productRevoked = nil
         promotedInAppPurchaseEvent = nil
+    }
+    
+    /// Check to see if a version of the app was purchased before a given range of product version and records the history.
+    /// - Parameter versions: A list of version history events.
+    public func loadPurchaseHistory(for versions:[VersionHistory]) {
+        Task {
+            await verifyPreviousPurchase(for:versions)
+        }
+    }
+    
+    /// Check to see if a version of the app was purchased before a given range of product version and records the history.
+    /// - Parameter versions: A list of version history events.
+    /// - Remark: From https://developer.apple.com/documentation/storekit/apptransaction?changes=latest_minor
+    public func verifyPreviousPurchase(for versions:[VersionHistory]) async  {
+        
+        // Default all previous versions to unpurchased
+        for version in versions {
+            version.wasPurchasedBefore = false
+        }
+        
+        do {
+            // Get the app transaction history.
+            let result:VerificationResult<AppTransaction> = try await AppTransaction.shared
+            
+            // Take action based on the history.
+            switch result {
+            case .unverified(let appTransaction, let verificationError):
+                Log.error(subsystem: "StoreManager", category: "verifyPreviousPurchase", "\(appTransaction.appVersion) \(verificationError.localizedDescription)")
+            case .verified(let appTransaction):
+                let originalAppVersion = appTransaction.originalAppVersion
+                
+                // Convert the origin date.
+                if let origin = Float(originalAppVersion) {
+                    // Scan all historical versions
+                    for history in versions {
+                        // Covert the required version.
+                        if let version = Float(history.version) {
+                            // See if the original transaction version is acceptable.
+                            if origin > 0 && origin < version {
+                                history.wasPurchasedBefore = true
+                            }
+                        }
+                    }
+                }
+                
+            }
+        } catch {
+            Log.error(subsystem: "StoreManager", category: "verifyPreviousPurchase", error.localizedDescription)
+        }
+        
+        // Record the history in the Store Manager
+        purchaseHistory = versions
     }
     
     /// This function listens for background transactions from the App Store.
@@ -379,10 +434,36 @@ public typealias Transaction = StoreKit.Transaction
         return false
     }
     
+    /// Checks to see if a version of the app was purchased before the given version.
+    /// - Parameter version: The version in question.
+    /// - Returns: Returns `true` if a version of the app was purchased before the given version, else returns `false` if not found or not purchased before.
+    public func wasPurchasedBefore(version:String) -> Bool {
+        
+        // Scan all product history
+        for history in purchaseHistory {
+            if history.version == version {
+                return history.wasPurchasedBefore
+            }
+        }
+        
+        // Not found
+        return false
+    }
+    
     /// Tests to see if the given product has been purchased from the App Store.
     /// - Parameter product: The Product to test.
     /// - Returns: Returns `true` if purchased, else returns `false`.
     public func isPurchased(_ product: Product) async throws -> Bool {
+        
+        // Is this purchase version sensitive?
+        let version = getAttribute("version", for: product.id)
+        if version != "" {
+            // Yes, check to see if a version of the app was purchased before.
+            if wasPurchasedBefore(version: version) {
+                // The app was before before the cutoff date, grant access to product.
+                return true
+            }
+        }
         
         // Ensure that we have a network connection
         guard NetworkConnection.isConnectedToNetwork() else {
@@ -404,6 +485,16 @@ public typealias Transaction = StoreKit.Transaction
     /// - Parameter id: The ID of the Product to test.
     /// - Returns: Returns `true` if purchased, else returns `false`.
     public func isPurchased(id:String) -> Bool {
+        
+        // Is this purchase version sensitive?
+        let version = getAttribute("version", for: id)
+        if version != "" {
+            // Yes, check to see if a version of the app was purchased before.
+            if wasPurchasedBefore(version: version) {
+                // The app was before before the cutoff date, grant access to product.
+                return true
+            }
+        }
         
         // Ensure that we have a network connection
         guard NetworkConnection.isConnectedToNetwork() else {

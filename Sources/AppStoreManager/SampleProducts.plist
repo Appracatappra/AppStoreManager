@@ -20,6 +20,8 @@
 	<dict>
 		<key>Image</key>
 		<string>ProductImageName03</string>
+		<key>version</key>
+		<string>2.0</string>
 		<key>Description</key>
 		<string>ProductDescription03</string>
 	</dict>
