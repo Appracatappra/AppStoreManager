@@ -85,6 +85,11 @@ public typealias Transaction = StoreKit.Transaction
         return vaultKey + ".00"
     }
     
+    /// Returns `true` if the purchase history was previously checked.
+    public var wasHistoryChecked:Bool {
+        return (purchaseHistory.count > 0)
+    }
+    
     // MARK: - Initializers
     /// Creates a new instance of the object and Starts it running.
     public init() {
