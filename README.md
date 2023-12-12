@@ -1,8 +1,22 @@
 # AppStoreManager
 
-![](https://img.shields.io/badge/license-MIT-green) ![](https://img.shields.io/badge/maintained%3F-Yes-green) ![](https://img.shields.io/badge/swift-5.4-green) ![](https://img.shields.io/badge/iOS-13.0-red) ![](https://img.shields.io/badge/macOS-10.15-red) ![](https://img.shields.io/badge/tvOS-13.0-red) ![](https://img.shields.io/badge/watchOS-6.0-red) ![](https://img.shields.io/badge/release-v1.0.8-blue)
+![](https://img.shields.io/badge/license-MIT-green) ![](https://img.shields.io/badge/maintained%3F-Yes-green) ![](https://img.shields.io/badge/swift-5.4-green) ![](https://img.shields.io/badge/iOS-17.0-red) ![](https://img.shields.io/badge/macOS-14.0-red) ![](https://img.shields.io/badge/tvOS-17.0-red) ![](https://img.shields.io/badge/watchOS-10.0-red) ![](https://img.shields.io/badge/dependency-LogManager-orange) ![](https://img.shields.io/badge/dependency-SimpleSerializer-orange) ![](https://img.shields.io/badge/dependency-SwiftletUtilities-orange)
 
-AppStoreManger is an easy to use, StoreKit 2 based, in-App Purchase manager.
+`AppStoreManger` is an easy to use, StoreKit 2 based, in-App Purchase manager.
+
+## Installation
+
+**Swift Package Manager** (Xcode 11 and above)
+
+1. In Xcode, select the **File** > **Add Package Dependency…** menu item.
+2. Paste `https://github.com/Appracatappra/AppStoreManger.git` in the dialog box.
+3. Follow the Xcode's instruction to complete the installation.
+
+> Why not CocoaPods, or Carthage, or etc?
+
+Supporting multiple dependency managers makes maintaining a library exponentially more complicated and time consuming.
+
+Since, the **Swift Package Manager** is integrated with Xcode 11 (and greater), it's the easiest choice to support going further.
 
 ## Overview
 
@@ -109,4 +123,6 @@ The following functions are the most commonly used:
 * **getAttribute** - `public func getAttribute(_ name:String, for productID:String, defaultValue:String = "") -> String` Returns an attribute for the given In-App Purchase ID as defined in the `Product.plist` file included in your App Bundle.
 * **beginRefundProcess** - `public func beginRefundProcess(for productID: String, completionHandler: purchaseUpdateHandler? = nil)` Begins the refund process for the given In-App Purchase ID.
 
+# Documentation
 
+The **Package** includes full **DocC Documentation** for all of Grace's features.
