@@ -1,0 +1,12 @@
+version: 1
+builder:
+  configs:
+  - platform: ios
+    scheme: AppStoreManager
+  - platform: macos-xcodebuild
+    scheme: AppStoreManager
+  - platform: tvos
+    scheme: AppStoreManager
+  - platform: watchos
+    scheme: AppStoreManager
+  - documentation_targets: [AppStoreManager]
