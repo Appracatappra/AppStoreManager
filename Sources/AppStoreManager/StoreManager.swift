@@ -345,7 +345,7 @@ public typealias Transaction = StoreKit.Transaction
         }
         
         // Are we conected to the network?
-        if NetworkConnection.isConnectedToNetwork() {
+        if NetworkConnection.shared.isConnectedToNetwork {
             // Yes, enshrine the vault
             enshrineVault()
         }
@@ -556,7 +556,7 @@ public typealias Transaction = StoreKit.Transaction
         }
         
         // Ensure that we have a network connection
-        guard NetworkConnection.isConnectedToNetwork() else {
+        guard NetworkConnection.shared.isConnectedToNetwork else {
             // Attempt to check the vault
             decantVault()
             return isInVault(id: product.id)
@@ -587,7 +587,7 @@ public typealias Transaction = StoreKit.Transaction
         }
         
         // Ensure that we have a network connection
-        guard NetworkConnection.isConnectedToNetwork() else {
+        guard NetworkConnection.shared.isConnectedToNetwork else {
             // Attempt to check the vault
             decantVault()
             return isInVault(id: id)
