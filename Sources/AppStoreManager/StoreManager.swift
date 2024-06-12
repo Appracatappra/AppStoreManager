@@ -37,7 +37,7 @@ public typealias Transaction = StoreKit.Transaction
     
     // MARK: - Static Properties
     /// A shared instance of the StoreManager.
-    public static var shared:StoreManager = StoreManager()
+    public nonisolated(unsafe) static let shared:StoreManager = StoreManager()
     
     // MARK: - Properties
     /// A list of available products.
