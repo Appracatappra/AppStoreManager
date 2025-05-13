@@ -18,7 +18,7 @@ public typealias Transaction = StoreKit.Transaction
 /// Handles the user making In-App purchase from within the App.
 /// The class has built in support for Family Sharable purchases and for Promoted In-App purchases.
 /// - Remark: The `StoreManager` requires a `Products.plist` file be included with the build of your App. This file must be a `Dictionary` of `Dictionary` that is in the format `[String:String]`. The `Key` for the outter most `Dictionary` must be the ID of an In-App Purchase Product that you have defined in App Store Connect for your App.
-@Observable open class StoreManager {
+@Observable open class StoreManager: @unchecked Sendable {
     /// Type for handling purchase update events.
     public typealias purchaseUpdateHandler = () -> Void
     
@@ -37,7 +37,7 @@ public typealias Transaction = StoreKit.Transaction
     
     // MARK: - Static Properties
     /// A shared instance of the StoreManager.
-    public nonisolated(unsafe) static let shared:StoreManager = StoreManager()
+    public static let shared:StoreManager = StoreManager()
     
     // MARK: - Properties
     /// A list of available products.
@@ -71,12 +71,15 @@ public typealias Transaction = StoreKit.Transaction
     public var promotedInAppPurchaseEvent: productEventHandler? = nil
     
     // MARK: - Computed Properties
+    /// Returns the current device model name.
+    private var modelName:String = "";
+    
     /// Returns the key to the vault of simplified products.
     private var vaultKey:String {
         if let bundleIdentifier = Bundle.main.bundleIdentifier {
-            return "\(bundleIdentifier).\(HardwareInformation.modelName)"
+            return "\(bundleIdentifier).\(modelName)"
         } else {
-            return "AppStoreManager.\(HardwareInformation.modelName)"
+            return "AppStoreManager.\(modelName)"
         }
     }
     
@@ -117,8 +120,13 @@ public typealias Transaction = StoreKit.Transaction
             await updateCustomerProductStatus()
         }
         
-        // Load any app purchase history if available.
-        decantHistory()
+        Task { @MainActor in
+            // Initially get the model name
+            self.modelName = HardwareInformation.modelName
+            
+            // Load any app purchase history if available.
+            decantHistory()
+        }
     }
     
     // MARK: - Deinitializer
@@ -139,7 +147,11 @@ public typealias Transaction = StoreKit.Transaction
     /// Check to see if a version of the app was purchased before a given range of product version and records the history.
     /// - Parameter versions: A list of version history events.
     public func loadPurchaseHistory(for versions:[VersionHistory]) {
-        Task {
+        
+        // Capture version list
+        nonisolated(unsafe) let versions = versions
+        
+        Task { @MainActor in
             await verifyPreviousPurchase(for:versions)
         }
     }
@@ -360,7 +372,7 @@ public typealias Transaction = StoreKit.Transaction
     /// - Returns: The serialized version of the vault.
     private func serializeVault() -> String {
         let serializer = Serializer(divider: "¶")
-            .append(HardwareInformation.modelName)
+            .append(modelName)
         
         // Serialize the vault
         for product in vault {
@@ -374,7 +386,7 @@ public typealias Transaction = StoreKit.Transaction
     /// - Returns: The serialized version of the history.
     private func serializeHistory() -> String {
         let serializer = Serializer(divider: "¶")
-            .append(HardwareInformation.modelName)
+            .append(modelName)
         
         // Serialize the history
         for history in purchaseHistory {
@@ -390,13 +402,13 @@ public typealias Transaction = StoreKit.Transaction
         var item:String = ""
         
         let deserializer = Deserializer(text: text, divider: "¶")
-        let modelName = deserializer.string()
+        let enshrinedModelName = deserializer.string()
         
         // Empty the vault
         vault = []
         
         // Is this a good vaulted value?
-        guard modelName == HardwareInformation.modelName else {
+        guard enshrinedModelName == modelName else {
             return
         }
         
@@ -414,13 +426,13 @@ public typealias Transaction = StoreKit.Transaction
         var item:String = ""
         
         let deserializer = Deserializer(text: text, divider: "¶")
-        let modelName = deserializer.string()
+        let enshrinedModelName = deserializer.string()
         
         // Empty the vault
         purchaseHistory = []
         
         // Is this a good vaulted value?
-        guard modelName == HardwareInformation.modelName else {
+        guard enshrinedModelName == modelName else {
             return
         }
         
