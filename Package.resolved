@@ -1,13 +1,13 @@
 {
-  "originHash" : "f3a5a302cb3164642df71214dddadcf3ae00a0102b6badb36dc3235cd9036654",
+  "originHash" : "94fc131bd663e895ff121b81a783ad5a46bfd98cddf42e322b1fde8548748a63",
   "pins" : [
     {
       "identity" : "logmanager",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appracatappra/LogManager",
       "state" : {
-        "revision" : "ed7b6f091d9f261e75211c214a4ba0ea3ba7a84d",
-        "version" : "2.0.4"
+        "revision" : "0dc18ac85ccdbb979152a1e4f64bfc6f377513b1",
+        "version" : "2.1.0"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appracatappra/SimpleSerializer",
       "state" : {
-        "revision" : "c68c9b9f44bf8d17b1cebd56fb478233b6583593",
-        "version" : "2.0.2"
+        "revision" : "ecfea26cc5a37441009297cc97b660fd5190c15f",
+        "version" : "2.5.0"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Appracatappra/SwiftletUtilities",
       "state" : {
-        "revision" : "2903319b5a082b649a0f608f5c30fa3f78c42cc8",
-        "version" : "2.0.4"
+        "revision" : "9ef9333b19433eb9a6d344a1ed0c1c00fb232e5a",
+        "version" : "2.1.3"
       }
     }
   ],
